@@ -23,11 +23,10 @@ public class ScraperScheduler {
 
 	private final CompanyRepository companyRepository;
 	private final DividendRepository dividendRepository;
-
 	private final Scraper yahooFinanceScraper;
 
 	//일정 주기마다 실행
-	@Scheduled(cron = "0 0 0 * * *")
+	@Scheduled(cron = "${scheduler.scrap.yahoo}")
 	public void yahooFinanceScheduling() {
 		log.info("scraping scheduler is started");
 		//저장된 회사 목록을 조회
