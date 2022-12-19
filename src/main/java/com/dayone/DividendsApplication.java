@@ -7,13 +7,14 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class DividendsApplication {
 
 	public static void main(String[] args) {
-//		SpringApplication.run(DividendsApplication.class, args);
+		SpringApplication.run(DividendsApplication.class, args);
 
 		try {
 			Connection connection = Jsoup.connect(
