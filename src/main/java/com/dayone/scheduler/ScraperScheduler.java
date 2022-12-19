@@ -2,11 +2,13 @@ package com.dayone.scheduler;
 
 import java.util.List;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.dayone.model.Company;
 import com.dayone.model.ScrapedResult;
+import com.dayone.model.constants.CacheKey;
 import com.dayone.persist.CompanyRepository;
 import com.dayone.persist.DividendRepository;
 import com.dayone.persist.entity.CompanyEntity;
@@ -26,6 +28,7 @@ public class ScraperScheduler {
 	private final Scraper yahooFinanceScraper;
 
 	//일정 주기마다 실행
+	@CacheEvict(value = CacheKey.KEY_FINANCE, allEntries = true) //finance에 해당하는 데이터는 모두 비운다
 	@Scheduled(cron = "${scheduler.scrap.yahoo}")
 	public void yahooFinanceScheduling() {
 		log.info("scraping scheduler is started");
@@ -34,10 +37,9 @@ public class ScraperScheduler {
 
 		//회사마다 배당금 정보를 새로 스크래핑
 		for (var company : companies) {
-			ScrapedResult scrapedResult = this.yahooFinanceScraper.scrap(Company.builder()
-				.name(company.getName())
-				.ticker(company.getTicker())
-				.build());
+			ScrapedResult scrapedResult = this.yahooFinanceScraper
+				.scrap(new Company(company.getName(), company.getTicker()));
+
 			//스크래핑한 배당금 정보 중 db에 없는 값은 저장
 			scrapedResult.getDividendEntities().stream()
 				.map(e -> new DividendEntity(company.getId(), e))
@@ -49,7 +51,6 @@ public class ScraperScheduler {
 					}
 				});
 
-
 			//연속적으로 스크래핑 대상 사이트 서버에 요청을 날리지 않도록 일시정지
 			try {
 				Thread.sleep(3000); //3 sec
@@ -58,6 +59,5 @@ public class ScraperScheduler {
 				Thread.currentThread().interrupt();
 			}
 		}
-
 	}
 }

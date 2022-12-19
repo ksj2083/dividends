@@ -4,18 +4,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import com.dayone.model.Company;
 import com.dayone.model.Dividend;
 import com.dayone.model.ScrapedResult;
+import com.dayone.model.constants.CacheKey;
 import com.dayone.persist.CompanyRepository;
 import com.dayone.persist.DividendRepository;
 import com.dayone.persist.entity.CompanyEntity;
 import com.dayone.persist.entity.DividendEntity;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class FinanceService {
@@ -23,7 +27,12 @@ public class FinanceService {
 	private final CompanyRepository companyRepository;
 	private final DividendRepository dividendRepository;
 
+	// 요청이 자주 들어오는가??
+	// 자주 변경되는 데이터 인가??
+
+	@Cacheable(key ="#companyName", value = CacheKey.KEY_FINANCE)
 	public ScrapedResult getDividendByCompanyName(String companyName) {
+		log.info("search company ->" + companyName);
 
 		//1. 회사명을 기준으로 회사 정보를 조회
 		CompanyEntity companyEntity = this.companyRepository.findByName(companyName)
@@ -36,16 +45,9 @@ public class FinanceService {
 		//3. 결과 조합 후 반환
 		List<Dividend> dividends = new ArrayList<>();
 		for (var entity : dividendEntities) {
-			dividends.add(Dividend.builder()
-					.date(entity.getDate())
-					.dividend(entity.getDividend())
-					.build());
+			dividends.add(new Dividend(entity.getDate(), entity.getDividend()));
 		}
 
-		return new ScrapedResult(Company.builder()
-			.ticker(companyEntity.getTicker())
-			.name(companyEntity.getName())
-			.build()
-			, dividends);
+		return new ScrapedResult(new Company(companyEntity.getTicker(), companyEntity.getName()), dividends);
 	}
 }
