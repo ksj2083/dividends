@@ -2,7 +2,7 @@ POST http://localhost:8080/company
 Content-Type: application/json
 
 {
-  "ticker": "DIA"
+  "ticker": "MMM"
 }
 
 ###
